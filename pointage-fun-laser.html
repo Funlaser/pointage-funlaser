@@ -40,15 +40,11 @@
   .feedback.show{opacity:1;pointer-events:all}
   .feedback.success{background:rgba(0,10,5,.95)}
   .feedback.error{background:rgba(10,0,5,.95)}
-  .feedback.loading{background:rgba(5,5,15,.95)}
   .feedback-icon{font-size:64px;margin-bottom:16px}
   .feedback-name{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:8px;text-align:center}
   .feedback.success .feedback-name{color:var(--success)}
   .feedback.error .feedback-name{color:var(--accent2)}
-  .feedback.loading .feedback-name{color:var(--accent)}
   .feedback-detail{font-size:14px;color:var(--muted);letter-spacing:1px;text-align:center}
-  .spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:20px}
-  @keyframes spin{to{transform:rotate(360deg)}}
   .log-section{width:100%;max-width:360px;margin-top:18px}
   .log-title{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;padding:0 2px}
   .log-entry{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;animation:slideIn .3s ease}
@@ -80,7 +76,6 @@
   .btn-danger{width:100%;margin-top:8px;padding:12px;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.25);border-radius:10px;color:var(--accent2);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
   .divider{height:1px;background:var(--border);margin:18px 0}
   .emp-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#1a1a26;border:1px solid var(--border);border-radius:8px;margin-bottom:5px}
-  .emp-item span{font-size:13px}
   .emp-del{background:none;border:none;color:var(--accent2);cursor:pointer;font-size:14px;padding:2px 6px}
   .add-row{display:grid;grid-template-columns:1fr 90px;gap:8px;margin-top:8px}
   .btn-add{padding:10px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:8px;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:1px}
@@ -90,19 +85,28 @@
   .hours-table tr:last-child td{border-bottom:none}
   .hours-val{font-family:'Orbitron',monospace;font-size:13px;color:var(--accent)}
   .hours-name{font-weight:600}
-  .period-tabs{display:flex;gap:6px;margin-bottom:12px}
+  .period-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
   .period-tab{padding:5px 12px;border-radius:6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s}
   .period-tab.active{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.3);color:var(--accent)}
-  .pin-login{text-align:center}
   .pin-err{font-size:12px;color:var(--accent2);margin-top:8px;min-height:18px;text-align:center}
   .sheets-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;letter-spacing:1px;margin-top:6px}
   .badge-ok{background:rgba(0,255,136,.1);color:var(--success);border:1px solid rgba(0,255,136,.2)}
   .badge-nok{background:rgba(255,170,0,.1);color:var(--warning);border:1px solid rgba(255,170,0,.2)}
+
+  /* VUE EMPLOYÉ */
+  .emp-view-btn{position:fixed;top:14px;left:14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:7px 11px;font-size:16px;cursor:pointer;z-index:50}
+  .emp-hours-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;width:100%;max-width:360px;margin-top:12px;position:relative;overflow:hidden}
+  .emp-hours-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--success),transparent);opacity:.6}
+  .emp-session{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+  .emp-session:last-child{border-bottom:none}
+  .emp-total{font-family:'Orbitron',monospace;font-size:28px;color:var(--success);text-align:center;margin:16px 0 4px}
+  .emp-total-label{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;text-align:center;margin-bottom:16px}
 </style>
 </head>
 <body>
 
 <button class="admin-btn" onclick="openAdminLogin()">🔐</button>
+<button class="emp-view-btn" onclick="openEmpLogin()">👤</button>
 
 <div class="logo">Fun Laser</div>
 <div class="subtitle">Pointage employés</div>
@@ -131,7 +135,6 @@
 
 <!-- Feedback -->
 <div class="feedback" id="feedback">
-  <div id="feedbackSpinner" class="spinner" style="display:none"></div>
   <div id="feedbackIcon" class="feedback-icon"></div>
   <div id="feedbackName" class="feedback-name"></div>
   <div id="feedbackDetail" class="feedback-detail"></div>
@@ -142,7 +145,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeLogin()">✕</button>
     <h3>Accès Admin</h3>
-    <div class="pin-login">
+    <div style="text-align:center">
       <div class="section-title">Mot de passe administrateur</div>
       <input class="field-input" id="loginPwdInput" type="password" placeholder="Mot de passe..."
         autocomplete="off" style="margin:14px 0 10px;text-align:center;font-size:16px;letter-spacing:2px"
@@ -153,13 +156,42 @@
   </div>
 </div>
 
+<!-- LOGIN EMPLOYÉ -->
+<div class="modal-overlay" id="empLoginOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEmpLogin()">✕</button>
+    <h3>Mes Heures</h3>
+    <div style="text-align:center">
+      <div class="section-title">Entre ton code PIN</div>
+      <div class="pin-display" id="empLoginDots" style="margin:16px auto 16px"></div>
+      <div class="numpad" id="empLoginNumpad" style="max-width:260px;margin:0 auto 12px"></div>
+      <div class="pin-err" id="empLoginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- VUE HEURES EMPLOYÉ -->
+<div class="modal-overlay" id="empHoursOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEmpHours()">✕</button>
+    <h3 id="empHoursTitle">Mes Heures</h3>
+    <div class="period-tabs">
+      <button class="period-tab active" onclick="setEmpPeriod('week',this)">Cette semaine</button>
+      <button class="period-tab" onclick="setEmpPeriod('month',this)">Ce mois</button>
+      <button class="period-tab" onclick="setEmpPeriod('all',this)">Tout</button>
+    </div>
+    <div class="emp-total" id="empTotalHours">0h00</div>
+    <div class="emp-total-label">Heures travaillées</div>
+    <div id="empSessionList"></div>
+  </div>
+</div>
+
 <!-- ADMIN PANEL -->
 <div class="modal-overlay" id="adminOverlay">
   <div class="modal">
     <button class="modal-close" onclick="closeAdmin()">✕</button>
     <h3>Administration</h3>
 
-    <!-- HEURES -->
     <div class="section-title" style="margin-top:0">Heures par employé</div>
     <div class="period-tabs">
       <button class="period-tab active" onclick="setPeriod('week',this)">Cette semaine</button>
@@ -170,7 +202,6 @@
 
     <div class="divider"></div>
 
-    <!-- CORRECTIONS -->
     <div class="section-title">Corrections</div>
     <div class="field-label">Ajouter un pointage oublié</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
@@ -190,7 +221,6 @@
 
     <div class="divider"></div>
 
-    <!-- EMPLOYÉS -->
     <div class="section-title">Employés & PIN</div>
     <div id="empList"></div>
     <div class="add-row" style="margin-top:10px">
@@ -201,7 +231,6 @@
 
     <div class="divider"></div>
 
-    <!-- GOOGLE SHEETS -->
     <div class="section-title">Google Sheets</div>
     <div class="field-label">URL Apps Script</div>
     <input class="field-input" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/..." />
@@ -210,7 +239,6 @@
 
     <div class="divider"></div>
 
-    <!-- MOT DE PASSE ADMIN -->
     <div class="section-title">Mot de passe admin</div>
     <div class="field-label">Nouveau mot de passe</div>
     <input class="field-input" id="newAdminPwd" placeholder="Laisser vide = inchangé" type="password" />
@@ -223,13 +251,15 @@
 <script>
 // ===== STATE =====
 let pin = '';
+let empLoginPin = '';
+let currentEmpName = '';
+let currentEmpPeriod = 'week';
 let employees = [];
 let scriptUrl = '';
 let adminPassword = 'funlaser';
 let recentLog = [];
 let allEntries = [];
 let currentPeriod = 'week';
-let sheetsOk = false;
 
 // ===== INIT =====
 async function init() {
@@ -242,22 +272,20 @@ async function init() {
   await loadFromSheets();
 }
 
-// ===== LOCAL STORAGE (backup) =====
 function loadLocal() {
   try {
     const s = localStorage.getItem('fl_config');
     if (s) {
       const c = JSON.parse(s);
-      employees    = c.employees    || [];
-      scriptUrl    = c.scriptUrl    || '';
-      adminPassword= c.adminPassword|| 'funlaser';
-      recentLog    = c.recentLog    || [];
-      allEntries   = c.allEntries   || [];
+      employees     = c.employees     || [];
+      scriptUrl     = c.scriptUrl     || '';
+      adminPassword = c.adminPassword || 'funlaser';
+      recentLog     = c.recentLog     || [];
+      allEntries    = c.allEntries    || [];
     }
   } catch(e) {}
   if (!employees.length) {
     employees = [
-      {name:'Claudy',   pin:'1111'},
       {name:'Roxane',   pin:'2222'},
       {name:'Naomi',    pin:'3333'},
       {name:'Mathilde', pin:'4444'},
@@ -274,24 +302,13 @@ function persist() {
   } catch(e) {}
 }
 
-// ===== SHEETS API =====
+// ===== SHEETS API (tout en GET) =====
 async function sheetsGet(params) {
   if (!scriptUrl) return null;
   try {
-    const url = scriptUrl + '?' + Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-    const r = await fetch(url);
-    return await r.json();
-  } catch(e) { return null; }
-}
-
-async function sheetsPost(data) {
-  if (!scriptUrl) return null;
-  try {
-    const r = await fetch(scriptUrl, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(data)
-    });
+    const qs = Object.entries(params)
+      .map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    const r = await fetch(scriptUrl + '?' + qs);
     return await r.json();
   } catch(e) { return null; }
 }
@@ -301,7 +318,6 @@ async function loadFromSheets() {
   if (!scriptUrl) { setSyncStatus('nok','Non connecté — stockage local'); return; }
   setSyncStatus('loading','Chargement depuis Sheets...');
   try {
-    // Config (employés + mot de passe)
     const cfg = await sheetsGet({action:'getConfig'});
     if (cfg && cfg.ok && cfg.config) {
       if (cfg.config.employees && cfg.config.employees.length)
@@ -309,31 +325,25 @@ async function loadFromSheets() {
       if (cfg.config.adminPassword)
         adminPassword = cfg.config.adminPassword;
     }
-    // Pointages
     const pts = await sheetsGet({action:'getAll'});
     if (pts && pts.ok) {
       allEntries = pts.entries || [];
-      // Reconstruire recentLog depuis allEntries (5 derniers)
       recentLog = [...allEntries]
-        .sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))
+        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))
         .slice(0,10)
-        .map(e=>({...e, time: new Date(e.timestamp).toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'})}));
+        .map(e => ({...e, time: new Date(e.timestamp).toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'})}));
     }
     persist();
     renderLog();
-    sheetsOk = true;
-    setSyncStatus('ok','Synchronisé avec Google Sheets');
+    setSyncStatus('ok','Synchronisé avec Google Sheets ✓');
   } catch(e) {
-    sheetsOk = false;
     setSyncStatus('nok','Erreur Sheets — données locales');
   }
 }
 
 function setSyncStatus(state, label) {
-  const dot = document.getElementById('syncDot');
-  const lbl = document.getElementById('syncLabel');
-  dot.className = 'sync-dot ' + (state==='ok'?'ok':state==='loading'?'loading':'err');
-  lbl.textContent = label;
+  document.getElementById('syncDot').className = 'sync-dot ' + (state==='ok'?'ok':state==='loading'?'loading':'err');
+  document.getElementById('syncLabel').textContent = label;
 }
 
 // ===== CLOCK =====
@@ -390,25 +400,20 @@ async function submitAction(type) {
   const timeStr = now.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'});
   const entry = {name:emp.name, action:type, time:timeStr, timestamp:ts};
 
-  // Sauvegarde locale immédiate
   allEntries.push(entry);
   recentLog.unshift(entry);
   if (recentLog.length>10) recentLog.pop();
   persist();
   renderLog();
 
-  // Feedback
   showFeedback('success', type==='in'?'✅':'👋', emp.name,
     (type==='in'?'Arrivée':'Départ')+' enregistré — '+timeStr);
-
   pin=''; renderPinDisplay();
 
-  // Sync Sheets en arrière-plan
   if (scriptUrl) {
     setSyncStatus('loading','Envoi vers Sheets...');
-    const res = await sheetsPost({action:'pointage', name:emp.name, type, timestamp:ts, manual:false});
-    if (res && res.ok) setSyncStatus('ok','Synchronisé avec Google Sheets');
-    else setSyncStatus('nok','Erreur Sheets — sauvegardé localement');
+    const res = await sheetsGet({action:'pointage', name:emp.name, type, timestamp:ts, manual:'false'});
+    setSyncStatus(res&&res.ok?'ok':'nok', res&&res.ok?'Synchronisé avec Google Sheets ✓':'Erreur Sheets — sauvegardé localement');
   }
 }
 
@@ -416,15 +421,12 @@ async function submitAction(type) {
 let fbTimer = null;
 function showFeedback(type, icon, name, detail) {
   const el = document.getElementById('feedback');
-  const spinner = document.getElementById('feedbackSpinner');
   el.className = `feedback ${type} show`;
-  spinner.style.display = type==='loading' ? 'block' : 'none';
-  document.getElementById('feedbackIcon').textContent = type==='loading' ? '' : icon;
+  document.getElementById('feedbackIcon').textContent = icon;
   document.getElementById('feedbackName').textContent = name;
   document.getElementById('feedbackDetail').textContent = detail;
   if (fbTimer) clearTimeout(fbTimer);
-  if (type !== 'loading')
-    fbTimer = setTimeout(()=>el.className='feedback', type==='error'?2000:2500);
+  fbTimer = setTimeout(()=>el.className='feedback', type==='error'?2000:2500);
   el.onclick = ()=>el.className='feedback';
 }
 
@@ -462,7 +464,123 @@ function checkLogin() {
   else {
     document.getElementById('loginErr').textContent='Mot de passe incorrect';
     document.getElementById('loginPwdInput').value='';
-    document.getElementById('loginPwdInput').focus();
+  }
+}
+
+// ===== VUE HEURES EMPLOYÉ =====
+function openEmpLogin() {
+  empLoginPin = '';
+  renderEmpLoginDots();
+  renderEmpLoginNumpad();
+  document.getElementById('empLoginErr').textContent='';
+  document.getElementById('empLoginOverlay').classList.add('open');
+}
+function closeEmpLogin() { document.getElementById('empLoginOverlay').classList.remove('open'); empLoginPin=''; }
+
+function renderEmpLoginDots() {
+  const el = document.getElementById('empLoginDots');
+  el.innerHTML='';
+  const len = Math.max(empLoginPin.length, 4);
+  for (let i=0;i<len;i++){
+    const d=document.createElement('div');
+    d.className='pin-dot'+(i<empLoginPin.length?' filled':'');
+    el.appendChild(d);
+  }
+}
+
+function renderEmpLoginNumpad() {
+  const el = document.getElementById('empLoginNumpad');
+  el.innerHTML='';
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+    const btn=document.createElement('button');
+    btn.className='num-btn'+(k===''?' empty':(k==='⌫'?' del':''));
+    btn.textContent=k;
+    btn.style.padding='12px 8px';
+    btn.style.fontSize='17px';
+    if(k) btn.onclick=()=>empLoginPress(k);
+    el.appendChild(btn);
+  });
+}
+
+function empLoginPress(k) {
+  if(k==='⌫') empLoginPin=empLoginPin.slice(0,-1);
+  else if(empLoginPin.length<8) empLoginPin+=k;
+  renderEmpLoginDots();
+  const emp = employees.find(e=>e.pin===empLoginPin);
+  if(emp) {
+    setTimeout(()=>{
+      closeEmpLogin();
+      openEmpHours(emp.name);
+    }, 200);
+  }
+}
+
+function openEmpHours(name) {
+  currentEmpName = name;
+  currentEmpPeriod = 'week';
+  document.querySelectorAll('#empHoursOverlay .period-tab').forEach((b,i)=>{b.classList.toggle('active',i===0);});
+  document.getElementById('empHoursTitle').textContent = '👤 ' + name;
+  renderEmpHours();
+  document.getElementById('empHoursOverlay').classList.add('open');
+}
+function closeEmpHours() { document.getElementById('empHoursOverlay').classList.remove('open'); }
+
+function setEmpPeriod(p, btn) {
+  currentEmpPeriod = p;
+  document.querySelectorAll('#empHoursOverlay .period-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderEmpHours();
+}
+
+function renderEmpHours() {
+  let startDate = null;
+  if(currentEmpPeriod==='week') startDate = getWeekStart();
+  else if(currentEmpPeriod==='month') startDate = getMonthStart();
+
+  const entries = [...allEntries]
+    .filter(e => e.name===currentEmpName && (!startDate||new Date(e.timestamp)>=startDate))
+    .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+
+  // Calculer sessions
+  let total = 0;
+  const sessions = [];
+  let openTs = null;
+  entries.forEach(e=>{
+    if(e.action==='in') openTs=new Date(e.timestamp);
+    else if(e.action==='out'&&openTs){
+      const diff=(new Date(e.timestamp)-openTs)/3600000;
+      total+=diff;
+      sessions.push({in:openTs, out:new Date(e.timestamp), duration:diff});
+      openTs=null;
+    }
+  });
+
+  document.getElementById('empTotalHours').textContent = fmtHours(total);
+
+  const el = document.getElementById('empSessionList');
+  if(!sessions.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Aucune session complète</div>';
+    return;
+  }
+  el.innerHTML='';
+  sessions.slice().reverse().forEach(s=>{
+    const d=document.createElement('div');
+    d.className='emp-session';
+    const dateStr=s.in.toLocaleDateString('fr-CH');
+    const inStr=s.in.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'});
+    const outStr=s.out.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'});
+    d.innerHTML=`<span style="color:var(--muted)">${dateStr}</span>
+      <span>${inStr} → ${outStr}</span>
+      <span style="color:var(--accent);font-family:'Orbitron',monospace;font-size:11px">${fmtHours(s.duration)}</span>`;
+    el.appendChild(d);
+  });
+
+  // Avertissement si session ouverte
+  if(openTs){
+    const warn=document.createElement('div');
+    warn.style.cssText='color:var(--warning);font-size:11px;text-align:center;margin-top:10px';
+    warn.textContent='⚠ Arrivée en cours — départ non encore enregistré';
+    el.appendChild(warn);
   }
 }
 
@@ -507,14 +625,14 @@ function renderEmpList() {
   });
 }
 function delEmp(i) {
-  if (confirm(`Supprimer ${employees[i].name} ?`)) { employees.splice(i,1); renderEmpList(); }
+  if(confirm(`Supprimer ${employees[i].name} ?`)){employees.splice(i,1);renderEmpList();}
 }
 function addEmployee() {
-  const name = document.getElementById('newName').value.trim();
-  const p    = document.getElementById('newPin').value.trim();
-  if (!name||!p) { alert('Nom et PIN requis'); return; }
-  if (employees.find(e=>e.pin===p)) { alert('Ce PIN est déjà utilisé !'); return; }
-  employees.push({name, pin:p});
+  const name=document.getElementById('newName').value.trim();
+  const p=document.getElementById('newPin').value.trim();
+  if(!name||!p){alert('Nom et PIN requis');return;}
+  if(employees.find(e=>e.pin===p)){alert('Ce PIN est déjà utilisé !');return;}
+  employees.push({name,pin:p});
   document.getElementById('newName').value='';
   document.getElementById('newPin').value='';
   renderEmpList();
@@ -527,10 +645,13 @@ async function saveAll() {
   if (newPwd) adminPassword = newPwd;
   persist();
   updateSheetsBadge();
-  // Sauvegarder config dans Sheets
   if (scriptUrl) {
-    const res = await sheetsPost({action:'saveConfig', employees, adminPassword});
-    if (res && res.ok) showFeedback('success','💾','Sauvegardé','Config enregistrée dans Sheets');
+    const res = await sheetsGet({
+      action:'saveConfig',
+      adminPassword,
+      employees: JSON.stringify(employees)
+    });
+    if(res&&res.ok) showFeedback('success','💾','Sauvegardé','Config enregistrée dans Sheets');
     else showFeedback('error','⚠️','Attention','Config sauvegardée localement uniquement');
   } else {
     showFeedback('success','💾','Sauvegardé','Config locale mise à jour');
@@ -538,47 +659,39 @@ async function saveAll() {
   closeAdmin();
 }
 
-// ===== HEURES =====
+// ===== HEURES ADMIN =====
 function setPeriod(p, btn) {
-  currentPeriod = p;
-  document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active'));
+  currentPeriod=p;
+  document.querySelectorAll('#adminOverlay .period-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderHoursTable();
 }
-function getWeekStart() {
-  const d=new Date(); d.setHours(0,0,0,0);
-  const day=d.getDay(); d.setDate(d.getDate()+(day===0?-6:1-day)); return d;
-}
-function getMonthStart() {
-  const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d;
-}
+function getWeekStart(){const d=new Date();d.setHours(0,0,0,0);const day=d.getDay();d.setDate(d.getDate()+(day===0?-6:1-day));return d;}
+function getMonthStart(){const d=new Date();d.setDate(1);d.setHours(0,0,0,0);return d;}
+
 function calcHours() {
-  let startDate = currentPeriod==='week'?getWeekStart():currentPeriod==='month'?getMonthStart():null;
-  const filtered = allEntries.filter(e=>!startDate||new Date(e.timestamp)>=startDate);
-  const result = {};
-  employees.forEach(emp=>{ result[emp.name]={total:0,sessions:[],open:null}; });
+  let startDate=currentPeriod==='week'?getWeekStart():currentPeriod==='month'?getMonthStart():null;
+  const filtered=allEntries.filter(e=>!startDate||new Date(e.timestamp)>=startDate);
+  const result={};
+  employees.forEach(emp=>{result[emp.name]={total:0,open:null};});
   [...filtered].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach(e=>{
-    if (!result[e.name]) result[e.name]={total:0,sessions:[],open:null};
-    if (e.action==='in') result[e.name].open=new Date(e.timestamp);
-    else if (e.action==='out'&&result[e.name].open) {
-      const diff=(new Date(e.timestamp)-result[e.name].open)/3600000;
-      result[e.name].total+=diff;
-      result[e.name].sessions.push(diff);
+    if(!result[e.name])result[e.name]={total:0,open:null};
+    if(e.action==='in') result[e.name].open=new Date(e.timestamp);
+    else if(e.action==='out'&&result[e.name].open){
+      result[e.name].total+=(new Date(e.timestamp)-result[e.name].open)/3600000;
       result[e.name].open=null;
     }
   });
   return result;
 }
-function fmtHours(h) {
-  const hrs=Math.floor(h);
-  const mins=Math.round((h-hrs)*60);
-  return `${hrs}h${mins.toString().padStart(2,'0')}`;
-}
-function renderHoursTable() {
+
+function fmtHours(h){const hrs=Math.floor(h);const mins=Math.round((h-hrs)*60);return `${hrs}h${mins.toString().padStart(2,'0')}`;}
+
+function renderHoursTable(){
   const data=calcHours();
   const wrap=document.getElementById('hoursTableWrap');
   const rows=Object.entries(data).map(([name,d])=>({name,total:d.total,open:d.open}));
-  if (!rows.length){wrap.innerHTML='<div style="color:var(--muted);font-size:12px">Aucune donnée</div>';return;}
+  if(!rows.length){wrap.innerHTML='<div style="color:var(--muted);font-size:12px">Aucune donnée</div>';return;}
   let html=`<table class="hours-table"><tr><th>Employé</th><th>Heures</th><th>Statut</th></tr>`;
   rows.forEach(r=>{
     const status=r.open
@@ -586,78 +699,67 @@ function renderHoursTable() {
       :`<span style="color:var(--muted);font-size:11px">Absent</span>`;
     html+=`<tr><td class="hours-name">${r.name}</td><td class="hours-val">${fmtHours(r.total)}</td><td>${status}</td></tr>`;
   });
-  html+='</table>';
-  wrap.innerHTML=html;
+  wrap.innerHTML=html+'</table>';
 }
 
 // ===== CORRECTIONS =====
-function renderCorrEmpSelect() {
+function renderCorrEmpSelect(){
   const sel=document.getElementById('corrEmp');
   sel.innerHTML='<option value="">— Employé —</option>';
-  employees.forEach(e=>{
-    const opt=document.createElement('option');
-    opt.value=e.name; opt.textContent=e.name; sel.appendChild(opt);
-  });
+  employees.forEach(e=>{const opt=document.createElement('option');opt.value=e.name;opt.textContent=e.name;sel.appendChild(opt);});
   const now=new Date();
   document.getElementById('corrDate').value=now.toISOString().slice(0,10);
   document.getElementById('corrTime').value=now.toTimeString().slice(0,5);
 }
-function renderCorrList() {
+
+function renderCorrList(){
   const el=document.getElementById('corrList');
-  if (!allEntries.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px 0">Aucune entrée</div>';return;}
+  if(!allEntries.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px 0">Aucune entrée</div>';return;}
   const sorted=[...allEntries].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,20);
   el.innerHTML='';
-  sorted.forEach((e)=>{
+  sorted.forEach(e=>{
     const d=new Date(e.timestamp);
-    const date=d.toLocaleDateString('fr-CH');
-    const time=d.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'});
     const realIdx=allEntries.indexOf(e);
     const div=document.createElement('div');
-    div.className='emp-item'; div.style.cssText='margin-bottom:4px;gap:6px';
+    div.className='emp-item';div.style.cssText='margin-bottom:4px;gap:6px';
     div.innerHTML=`<span style="font-size:11px;flex:1"><strong>${e.name}</strong><br>
-      <span style="color:var(--muted)">${date} ${time}${e.manual?' ✏️':''}</span></span>
-      <span class="log-badge ${e.action==='in'?'badge-in':'badge-out'}" style="white-space:nowrap">
-        ${e.action==='in'?'Arrivée':'Départ'}</span>
-      <button class="emp-del" onclick="deleteEntry(${realIdx})" title="Supprimer">🗑</button>`;
+      <span style="color:var(--muted)">${d.toLocaleDateString('fr-CH')} ${d.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'})}${e.manual?' ✏️':''}</span></span>
+      <span class="log-badge ${e.action==='in'?'badge-in':'badge-out'}" style="white-space:nowrap">${e.action==='in'?'Arrivée':'Départ'}</span>
+      <button class="emp-del" onclick="deleteEntry(${realIdx})">🗑</button>`;
     el.appendChild(div);
   });
 }
-async function addCorrection() {
+
+async function addCorrection(){
   const name=document.getElementById('corrEmp').value;
   const action=document.getElementById('corrAction').value;
   const date=document.getElementById('corrDate').value;
   const time=document.getElementById('corrTime').value;
-  if (!name||!date||!time){alert('Remplis tous les champs');return;}
+  if(!name||!date||!time){alert('Remplis tous les champs');return;}
   const ts=new Date(`${date}T${time}:00`).toISOString();
   const entry={name,action,time,timestamp:ts,manual:true};
   allEntries.push(entry);
   recentLog.unshift(entry);
-  if (recentLog.length>10) recentLog.pop();
-  persist(); renderLog(); renderHoursTable(); renderCorrList();
-  if (scriptUrl) {
-    const res=await sheetsPost({action:'pointage',name,type:action,timestamp:ts,manual:true});
-    if (res&&res.ok) setSyncStatus('ok','Correction synchronisée');
-    else setSyncStatus('nok','Erreur Sheets — sauvegardé localement');
-  }
+  if(recentLog.length>10)recentLog.pop();
+  persist();renderLog();renderHoursTable();renderCorrList();
+  if(scriptUrl) await sheetsGet({action:'pointage',name,type:action,timestamp:ts,manual:'true'});
   showFeedback('success','✏️',name,`Pointage ajouté — ${time}`);
 }
-async function deleteEntry(idx) {
+
+async function deleteEntry(idx){
   const e=allEntries[idx];
-  if (!e) return;
+  if(!e)return;
   const d=new Date(e.timestamp);
-  const label=`${e.name} — ${e.action==='in'?'Arrivée':'Départ'} — ${d.toLocaleDateString('fr-CH')} ${d.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'})}`;
-  if (!confirm(`Supprimer :\n${label} ?`)) return;
+  if(!confirm(`Supprimer :\n${e.name} — ${e.action==='in'?'Arrivée':'Départ'} — ${d.toLocaleDateString('fr-CH')} ${d.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'})} ?`))return;
   allEntries.splice(idx,1);
   recentLog=recentLog.filter(r=>r.timestamp!==e.timestamp||r.name!==e.name);
-  persist(); renderLog(); renderHoursTable(); renderCorrList();
-  if (scriptUrl) {
-    await sheetsPost({action:'deleteEntry',name:e.name,timestamp:e.timestamp});
-  }
+  persist();renderLog();renderHoursTable();renderCorrList();
+  if(scriptUrl) await sheetsGet({action:'deleteEntry',name:e.name,timestamp:e.timestamp});
 }
 
 // ===== EXPORT CSV =====
-function exportCSV() {
-  if (!allEntries.length){alert('Aucune donnée à exporter');return;}
+function exportCSV(){
+  if(!allEntries.length){alert('Aucune donnée à exporter');return;}
   let csv='Date,Heure,Nom,Action\n';
   allEntries.forEach(e=>{
     const d=new Date(e.timestamp);
@@ -666,8 +768,8 @@ function exportCSV() {
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url; a.download=`pointage_funlaser_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click(); URL.revokeObjectURL(url);
+  a.href=url;a.download=`pointage_funlaser_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();URL.revokeObjectURL(url);
 }
 
 init();
